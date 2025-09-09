@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { X, Play, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { X, Play, ChevronLeft, ChevronRight, Share2, Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import type { MediaItem } from "./types/media";
-import { loadLocalMedia } from "./utils/mediaLoader";
+import { loadLocalMedia, generateSampleMedia } from "./utils/mediaLoader";
 import JSZip from "jszip";
 
 export function MasonryGallery() {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [mediaLoading, setMediaLoading] = useState<{ [id: string]: boolean }>({});
 
   // Load media files on component mount
   useEffect(() => {
@@ -111,6 +113,15 @@ export function MasonryGallery() {
       URL.revokeObjectURL(url);
     }, 100);
   };
+
+  // Helper to show loader for each media
+  const handleMediaLoad = (id: string) => {
+    setMediaLoading((prev) => ({ ...prev, [id]: false }));
+  };
+  const handleMediaStart = (id: string) => {
+    setMediaLoading((prev) => ({ ...prev, [id]: true }));
+  };
+
   return (
     <>
       <aside
@@ -127,17 +138,36 @@ export function MasonryGallery() {
       {/* Masonry Grid */}
       <div className="gap-4 space-y-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
         {mediaItems.map((item) => (
-          <div key={item.id} className="rounded-xl cursor-pointer" onClick={() => openLightbox(item)}>
+          <div key={item.id} className="relative rounded-xl cursor-pointer" onClick={() => openLightbox(item)}>
+            {/* Loader overlay */}
+            {mediaLoading[item.id] && (
+              <div className="z-10 absolute inset-0 flex justify-center items-center bg-black/10">
+                <span className="border-4 border-gray-300 border-t-primary rounded-full w-10 h-10 animate-spin"></span>
+              </div>
+            )}
             {item.type === "video" ? (
               <div className="relative">
                 <span className="top-1/2 left-1/2 z-50 absolute flex justify-center items-center bg-black/70 rounded-full w-14 h-14 -translate-x-1/2 -translate-y-1/2">
                   <Play className="w-7 h-7 text-white" fill="currentColor" />
                 </span>
-
-                <video src={item.src} className="rounded-xl w-full h-auto object-cover" muted preload="metadata" />
+                <video
+                  src={item.src}
+                  className="rounded-xl w-full h-auto object-cover"
+                  muted
+                  preload="metadata"
+                  onLoadStart={() => handleMediaStart(item.id)}
+                  onLoadedData={() => handleMediaLoad(item.id)}
+                />
               </div>
             ) : (
-              <img src={item.src} alt={item.title} className="rounded-xl w-full h-auto object-cover" loading="lazy" />
+              <img
+                src={item.src}
+                alt={item.title}
+                className="rounded-xl w-full h-auto object-cover"
+                loading="lazy"
+                onLoad={() => handleMediaLoad(item.id)}
+                onLoadStart={() => handleMediaStart(item.id)}
+              />
             )}
           </div>
         ))}
