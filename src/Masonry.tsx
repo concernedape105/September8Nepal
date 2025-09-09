@@ -1,35 +1,32 @@
 import { useState, useEffect } from "react";
-import { X, Play, ChevronLeft, ChevronRight, Share2, Download, Info } from "lucide-react";
+import { X, Play, ChevronLeft, ChevronRight, Download, LoaderIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import type { MediaItem } from "./types/media";
-import { loadLocalMedia, generateSampleMedia } from "./utils/mediaLoader";
+import { loadLocalMedia } from "./utils/mediaLoader";
+import { useQuery } from "@tanstack/react-query";
 import JSZip from "jszip";
 
 export function MasonryGallery() {
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [mediaLoading, setMediaLoading] = useState<{ [id: string]: boolean }>({});
 
-  // Load media files on component mount
-  useEffect(() => {
-    const loadMedia = async () => {
+  const {
+    data: mediaItems = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["mediaItems"],
+    queryFn: async () => {
       try {
         const localMedia = await loadLocalMedia();
-
-        if (localMedia.length > 0) {
-          setMediaItems(localMedia);
-        } else {
-          // Fallback to sample media if no local files
-        }
+        return localMedia;
       } catch (error) {
         console.log("Error loading media, using sample data:", error);
+        return [];
       }
-    };
-
-    loadMedia();
-  }, []);
+    },
+  });
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -114,60 +111,31 @@ export function MasonryGallery() {
     }, 100);
   };
 
-  // Helper to show loader for each media
-  const handleMediaLoad = (id: string) => {
-    setMediaLoading((prev) => ({ ...prev, [id]: false }));
-  };
-  const handleMediaStart = (id: string) => {
-    setMediaLoading((prev) => ({ ...prev, [id]: true }));
-  };
-
   return (
-    <>
-      <aside
-        className="top-0 left-0 z-50 fixed bg-red-500 py-2 w-full text-white text-center"
-        role="status"
-        aria-live="polite"
-      >
-        ⚠️ Urgent: Major hospitals, including Civil Hospital, have run out of blood collection equipment. Please donate
-        blood at your nearest blood bank to help save lives.
-      </aside>
+    <div className="h-full">
       <div className="flex justify-center my-6">
         <Button onClick={handleDownloadAll}>Download All Files as ZIP</Button>
       </div>
       {/* Masonry Grid */}
+      {isLoading && (
+        <div className="flex justify-center items-center col-span-full h-1/2">
+          <LoaderIcon className="w-8 h-8 text-muted-foreground animate-spin" />
+          <span className="ml-2 text-muted-foreground">Loading media...</span>
+        </div>
+      )}
       <div className="gap-4 space-y-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
         {mediaItems.map((item) => (
-          <div key={item.id} className="relative rounded-xl cursor-pointer" onClick={() => openLightbox(item)}>
-            {/* Loader overlay */}
-            {mediaLoading[item.id] && (
-              <div className="z-10 absolute inset-0 flex justify-center items-center bg-black/10">
-                <span className="border-4 border-gray-300 border-t-primary rounded-full w-10 h-10 animate-spin"></span>
-              </div>
-            )}
+          <div key={item.id} className="rounded-xl cursor-pointer" onClick={() => openLightbox(item)}>
             {item.type === "video" ? (
               <div className="relative">
                 <span className="top-1/2 left-1/2 z-50 absolute flex justify-center items-center bg-black/70 rounded-full w-14 h-14 -translate-x-1/2 -translate-y-1/2">
                   <Play className="w-7 h-7 text-white" fill="currentColor" />
                 </span>
-                <video
-                  src={item.src}
-                  className="rounded-xl w-full h-auto object-cover"
-                  muted
-                  preload="metadata"
-                  onLoadStart={() => handleMediaStart(item.id)}
-                  onLoadedData={() => handleMediaLoad(item.id)}
-                />
+
+                <video src={item.src} className="rounded-xl w-full h-auto object-cover" muted preload="metadata" />
               </div>
             ) : (
-              <img
-                src={item.src}
-                alt={item.title}
-                className="rounded-xl w-full h-auto object-cover"
-                loading="lazy"
-                onLoad={() => handleMediaLoad(item.id)}
-                onLoadStart={() => handleMediaStart(item.id)}
-              />
+              <img src={item.src} alt={item.title} className="rounded-xl w-full h-auto object-cover" loading="lazy" />
             )}
           </div>
         ))}
@@ -308,6 +276,6 @@ export function MasonryGallery() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

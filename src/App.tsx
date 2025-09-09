@@ -6,8 +6,16 @@ import "./App.css";
 function App() {
   return (
     <>
-      <main className="bg-background min-h-screen">
-        <div className="mx-auto px-4 py-8 container">
+      <aside
+        className="top-0 left-0 z-50 sticky bg-red-500 py-2 w-full text-white text-center"
+        role="status"
+        aria-live="polite"
+      >
+        ⚠️ Urgent: Major hospitals, including Civil Hospital, have run out of blood collection equipment. Please donate
+        blood at your nearest blood bank to help save lives.
+      </aside>
+      <main className="flex flex-col bg-background h-screen min-h-screen">
+        <div className="basis-[20%]">
           <div className="mb-8 text-center">
             <h1 className="my-2 font-bold text-foreground text-4xl">Nepal, September 8</h1>
             <p className="text-muted-foreground">
@@ -27,9 +35,11 @@ function App() {
               345+ <span className="opacity-80 ml-2 font-normal">Injured</span>
             </span>
           </div>
+        </div>
+        <div className="flex-1 h-full basis-[75%]">
           <MasonryGallery />
         </div>
-        <footer className="mx-auto mt-12 px-4 py-8 border-t border-border text-center container">
+        <footer className="px-4 py-4 border-t w-screen text-center basis-[5%]">
           <div className="flex flex-col items-center gap-2">
             <span className="inline-flex items-center gap-2 text-muted-foreground text-sm">
               <Info className="w-6 h-6" />
