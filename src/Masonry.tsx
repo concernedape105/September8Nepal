@@ -10,12 +10,7 @@ export function MasonryGallery() {
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const {
-    data: mediaItems = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data: mediaItems = [], isLoading } = useQuery({
     queryKey: ["mediaItems"],
     queryFn: async () => {
       try {
