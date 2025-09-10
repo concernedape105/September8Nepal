@@ -6,7 +6,7 @@ function App() {
   return (
     <>
       <aside
-        className="top-0 left-0 z-50 sticky bg-red-500 py-2 w-full text-white text-center"
+        className="top-0 left-0 z-60 sticky bg-red-500 py-2 w-full text-white text-center"
         role="status"
         aria-live="polite"
       >

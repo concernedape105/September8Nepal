@@ -128,7 +128,7 @@ export function MasonryGallery() {
 
       {/* Lightbox Modal */}
       {selectedItem && (
-        <div className="z-50 fixed inset-0 flex bg-black/90 backdrop-blur-sm h-screen">
+        <div className="z-70 fixed inset-0 flex bg-black/90 backdrop-blur-sm h-screen">
           <div className="absolute inset-0 flex flex-col h-full min-h-0">
             {/* Close Button */}
             <Button
