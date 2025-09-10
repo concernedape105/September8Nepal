@@ -14,7 +14,7 @@ function App() {
         blood at your nearest blood bank to help save lives.
       </aside>
       {/* Top-level flex column wrapper */}
-      <div className="flex flex-col bg-background min-h-screen">
+      <div className="flex flex-col bg-background min-h-[100dvh]">
         <main className="flex-1">
           <div className="basis-[20%]">
             <div className="mb-8 text-center">
