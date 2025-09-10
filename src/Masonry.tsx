@@ -1,26 +1,17 @@
 import { useState, useEffect } from "react";
 import { X, Play, ChevronLeft, ChevronRight, Download, LoaderIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { MediaItem } from "./types/media";
-import { loadLocalMedia } from "./utils/mediaLoader";
+import { type CloudinaryMedia, loadCloudinaryMedia } from "./utils/mediaLoader";
 import { useQuery } from "@tanstack/react-query";
 import JSZip from "jszip";
 
 export function MasonryGallery() {
-  const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<CloudinaryMedia | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const { data: mediaItems = [], isLoading } = useQuery({
     queryKey: ["mediaItems"],
-    queryFn: async () => {
-      try {
-        const localMedia = await loadLocalMedia();
-        return localMedia;
-      } catch (error) {
-        console.log("Error loading media, using sample data:", error);
-        return [];
-      }
-    },
+    queryFn: loadCloudinaryMedia,
   });
 
   // Handle keyboard navigation
@@ -58,7 +49,7 @@ export function MasonryGallery() {
     };
   }, [selectedItem, currentIndex]);
 
-  const openLightbox = (item: MediaItem) => {
+  const openLightbox = (item: CloudinaryMedia) => {
     const index = mediaItems.findIndex((media) => media.id === item.id);
     setCurrentIndex(index);
     setSelectedItem(item);
@@ -81,10 +72,10 @@ export function MasonryGallery() {
     await Promise.all(
       mediaItems.map(async (item) => {
         try {
-          const response = await fetch(item.src);
+          const response = await fetch(item.url);
           const blob = await response.blob();
           const ext = item.type === "image" ? ".jpg" : ".mp4";
-          zip.file(item.title.replace(/\s+/g, "_").toLowerCase() + ext, blob);
+          zip.file(item.id.replace(/\s+/g, "_").toLowerCase() + ext, blob);
         } catch (e) {
           // Optionally handle errors for individual files
         }
@@ -106,6 +97,9 @@ export function MasonryGallery() {
     }, 100);
   };
 
+  const getVideoThumbnail = (item: CloudinaryMedia) =>
+    item.type === "video" ? item.url.replace(/\.mp4$/, ".jpg").replace("/upload/", "/upload/so_0/") : item.url;
+
   return (
     <div className="h-full">
       <div className="flex justify-center my-6">
@@ -118,20 +112,16 @@ export function MasonryGallery() {
           <span className="ml-2 text-muted-foreground">Loading media...</span>
         </div>
       )}
-      <div className="gap-4 space-y-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
+      <div className="gap-4 space-y-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 p-4">
         {mediaItems.map((item) => (
           <div key={item.id} className="rounded-xl cursor-pointer" onClick={() => openLightbox(item)}>
-            {item.type === "video" ? (
-              <div className="relative">
-                <span className="top-1/2 left-1/2 z-50 absolute flex justify-center items-center bg-black/70 rounded-full w-14 h-14 -translate-x-1/2 -translate-y-1/2">
-                  <Play className="w-7 h-7 text-white" fill="currentColor" />
-                </span>
-
-                <video src={item.src} className="rounded-xl w-full h-auto object-cover" muted preload="metadata" />
-              </div>
-            ) : (
-              <img src={item.src} alt={item.title} className="rounded-xl w-full h-auto object-cover" loading="lazy" />
-            )}
+            <div className="relative">
+              <span className="top-1/2 left-1/2 z-50 absolute flex justify-center items-center bg-black/70 rounded-full w-14 h-14 -translate-x-1/2 -translate-y-1/2">
+                <Play className="w-7 h-7 text-white" fill="currentColor" />
+              </span>
+              <img src={getVideoThumbnail(item)} className="rounded-xl w-full h-auto object-cover" />
+            </div>
+            <div className="mt-2 text-muted-foreground text-xs text-center">{item.id || "Untitled"}</div>
           </div>
         ))}
       </div>
@@ -178,13 +168,13 @@ export function MasonryGallery() {
                 <div className="relative flex flex-1 justify-center items-center bg-black rounded-lg h-full min-h-0 overflow-hidden">
                   {selectedItem.type === "image" ? (
                     <img
-                      src={selectedItem.src || "/placeholder.svg"}
-                      alt={selectedItem.title}
+                      src={selectedItem.url || "/placeholder.svg"}
+                      alt={selectedItem.id}
                       className="w-full h-full object-contain"
                     />
                   ) : (
                     <video
-                      src={selectedItem.src}
+                      src={selectedItem.url}
                       className="w-full h-full object-contain"
                       controls
                       controlsList="download"
@@ -196,11 +186,22 @@ export function MasonryGallery() {
                     />
                   )}
                 </div>
+                <Button variant="outline" size="sm" asChild className="md:hidden top-8 right-8 z-50 absolute">
+                  <a
+                    href={selectedItem?.url}
+                    download={(selectedItem?.id || "untitled") + ".mp4"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Download className="mr-1 w-4 h-4" />
+                    Download Video
+                  </a>
+                </Button>
                 {/* Metadata Panel */}
-                <div className="flex flex-col bg-popover p-6 rounded-lg w-full lg:w-80 h-full overflow-auto text-popover-foreground">
+                <div className="hidden md:flex flex-col bg-popover ml-2 p-6 rounded-lg md:w-60 lg:w-80 h-full overflow-auto text-popover-foreground">
                   <div className="flex flex-col flex-1 space-y-4 break-words">
                     <div>
-                      <h2 className="mb-2 font-bold text-xl text-wrap">{selectedItem.title}</h2>
+                      <h2 className="mb-2 font-bold text-xl text-wrap">{selectedItem?.id || "Untitled"}</h2>
 
                       <div className="mb-2 text-muted-foreground text-xs">
                         <span>
@@ -215,16 +216,13 @@ export function MasonryGallery() {
                     <div className="flex gap-2 mt-2">
                       <Button variant="outline" size="sm" asChild className="flex-1">
                         <a
-                          href={selectedItem.src}
-                          download={
-                            selectedItem.title.replace(/\s+/g, "_").toLowerCase() +
-                            (selectedItem.type === "image" ? ".jpg" : ".mp4")
-                          }
+                          href={selectedItem?.url}
+                          download={(selectedItem?.id || "untitled") + ".mp4"}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           <Download className="mr-1 w-4 h-4" />
-                          Download {selectedItem.type === "image" ? "Image" : "Video"}
+                          Download Video
                         </a>
                       </Button>
                     </div>
@@ -242,8 +240,8 @@ export function MasonryGallery() {
             {/* Thumbnail Preview Strip */}
             <div className="flex-0 bg-black/50 backdrop-blur-sm p-4 h-full">
               <div className="flex justify-center items-center">
-                <div className="flex gap-2 pb-2 max-w-full overflow-x-auto">
-                  {mediaItems.map((item, index) => (
+                <div className="flex gap-2 py-2 max-w-full overflow-x-auto">
+                  {mediaItems.map((item, index: number) => (
                     <button
                       key={item.id}
                       onClick={() => navigateToItem(index)}
@@ -253,11 +251,7 @@ export function MasonryGallery() {
                           : "opacity-60 hover:opacity-80"
                       }`}
                     >
-                      <img
-                        src={item.type === "video" ? item.thumbnail || item.src : item.src}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={getVideoThumbnail(item)} alt={item.id} className="w-full h-full object-cover" />
                       {item.type === "video" && (
                         <div className="absolute inset-0 flex justify-center items-center bg-black/30">
                           <Play className="w-4 h-4 text-white" fill="currentColor" />
