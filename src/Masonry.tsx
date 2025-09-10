@@ -8,6 +8,7 @@ import JSZip from "jszip";
 export function MasonryGallery() {
   const [selectedItem, setSelectedItem] = useState<CloudinaryMedia | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [preparingDownload, setPreparingDownload] = useState(false);
 
   const { data: mediaItems = [], isLoading } = useQuery({
     queryKey: ["mediaItems"],
@@ -67,6 +68,7 @@ export function MasonryGallery() {
   // Inside your MasonryGallery component
 
   const handleDownloadAll = async () => {
+    setPreparingDownload(true);
     const zip = new JSZip();
 
     await Promise.all(
@@ -94,6 +96,7 @@ export function MasonryGallery() {
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      setPreparingDownload(false);
     }, 100);
   };
 
@@ -103,7 +106,10 @@ export function MasonryGallery() {
   return (
     <div className="h-full">
       <div className="flex justify-center my-6">
-        <Button onClick={handleDownloadAll}>Download All Files as ZIP</Button>
+        <Button onClick={handleDownloadAll} className="transition-all" disabled={preparingDownload}>
+          {preparingDownload && <LoaderIcon className="animate-spin" />}
+          <span>Download All Files as ZIP</span>
+        </Button>
       </div>
       {/* Masonry Grid */}
       {isLoading && (
@@ -188,7 +194,7 @@ export function MasonryGallery() {
                 </div>
                 <Button variant="outline" size="sm" asChild className="md:hidden top-8 right-8 z-50 absolute">
                   <a
-                    href={selectedItem?.url}
+                    href={selectedItem?.url.replace("/upload/", "/upload/fl_attachment/")}
                     download={(selectedItem?.id || "untitled") + ".mp4"}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -216,7 +222,7 @@ export function MasonryGallery() {
                     <div className="flex gap-2 mt-2">
                       <Button variant="outline" size="sm" asChild className="flex-1">
                         <a
-                          href={selectedItem?.url}
+                          href={selectedItem?.url.replace("/upload/", "/upload/fl_attachment/")}
                           download={(selectedItem?.id || "untitled") + ".mp4"}
                           target="_blank"
                           rel="noopener noreferrer"
