@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Play, ChevronLeft, ChevronRight, Download, LoaderIcon } from "lucide-react";
+import { Play, ChevronLeft, ChevronRight, Download, LoaderIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type CloudinaryMedia, loadCloudinaryMedia } from "./utils/mediaLoader";
 import { useQuery } from "@tanstack/react-query";
@@ -54,6 +54,7 @@ export function MasonryGallery() {
     const index = mediaItems.findIndex((media) => media.id === item.id);
     setCurrentIndex(index);
     setSelectedItem(item);
+    window.history.pushState({ lightbox: true }, "", `?view=${item.id}`);
   };
 
   const navigateToItem = (index: number) => {
@@ -64,6 +65,7 @@ export function MasonryGallery() {
 
   const closeLightbox = () => {
     setSelectedItem(null);
+    window.history.back();
   };
   // Inside your MasonryGallery component
 
@@ -99,6 +101,14 @@ export function MasonryGallery() {
       setPreparingDownload(false);
     }, 100);
   };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setSelectedItem(null);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const getVideoThumbnail = (item: CloudinaryMedia) =>
     item.type === "video" ? item.url.replace(/\.mp4$/, ".jpg").replace("/upload/", "/upload/so_0/") : item.url;
@@ -143,7 +153,7 @@ export function MasonryGallery() {
               className="top-4 right-4 z-10 absolute rounded-full text-black"
               onClick={closeLightbox}
             >
-              <X className="w-6 h-6" />
+              <XIcon className="w-6 h-6" />
             </Button>
 
             {/* Navigation Buttons */}
@@ -192,17 +202,28 @@ export function MasonryGallery() {
                     />
                   )}
                 </div>
-                <Button variant="outline" size="sm" asChild className="md:hidden top-8 right-8 z-50 absolute">
-                  <a
-                    href={selectedItem?.url.replace("/upload/", "/upload/fl_attachment/")}
-                    download={(selectedItem?.id || "untitled") + ".mp4"}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                {/* Close Button */}
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="md:hidden top-4 right-4 z-50 absolute rounded-full text-white"
+                    onClick={closeLightbox}
                   >
-                    <Download className="mr-1 w-4 h-4" />
-                    Download Video
-                  </a>
-                </Button>
+                    <XIcon className="w-6 h-6" color="white" />
+                  </Button>
+                  <Button variant="outline" size="sm" asChild className="md:hidden top-6` right-16 z-50 absolute">
+                    <a
+                      href={selectedItem?.url.replace("/upload/", "/upload/fl_attachment/")}
+                      download={(selectedItem?.id || "untitled") + ".mp4"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Download className="mr-1 w-4 h-4" />
+                      Download Video
+                    </a>
+                  </Button>
+                </>
                 {/* Metadata Panel */}
                 <div className="hidden md:flex flex-col bg-popover ml-2 p-6 rounded-lg md:w-60 lg:w-80 h-full overflow-auto text-popover-foreground">
                   <div className="flex flex-col flex-1 space-y-4 break-words">
