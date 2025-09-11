@@ -3,12 +3,10 @@ import { Play, ChevronLeft, ChevronRight, Download, LoaderIcon, XIcon } from "lu
 import { Button } from "@/components/ui/button";
 import { type CloudinaryMedia, loadCloudinaryMedia } from "./utils/mediaLoader";
 import { useQuery } from "@tanstack/react-query";
-import JSZip from "jszip";
 
 export function MasonryGallery() {
   const [selectedItem, setSelectedItem] = useState<CloudinaryMedia | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [preparingDownload, setPreparingDownload] = useState(false);
 
   const { data: mediaItems = [], isLoading } = useQuery({
     queryKey: ["mediaItems"],
@@ -69,38 +67,38 @@ export function MasonryGallery() {
   };
   // Inside your MasonryGallery component
 
-  const handleDownloadAll = async () => {
-    setPreparingDownload(true);
-    const zip = new JSZip();
+  // const handleDownloadAll = async () => {
+  //   setPreparingDownload(true);
+  //   const zip = new JSZip();
 
-    await Promise.all(
-      mediaItems.map(async (item) => {
-        try {
-          const response = await fetch(item.url);
-          const blob = await response.blob();
-          const ext = item.type === "image" ? ".jpg" : ".mp4";
-          zip.file(item.id.replace(/\s+/g, "_").toLowerCase() + ext, blob);
-        } catch (e) {
-          // Optionally handle errors for individual files
-        }
-      })
-    );
+  //   await Promise.all(
+  //     mediaItems.map(async (item) => {
+  //       try {
+  //         const response = await fetch(item.url);
+  //         const blob = await response.blob();
+  //         const ext = item.type === "image" ? ".jpg" : ".mp4";
+  //         zip.file(item.id.replace(/\s+/g, "_").toLowerCase() + ext, blob);
+  //       } catch (e) {
+  //         // Optionally handle errors for individual files
+  //       }
+  //     })
+  //   );
 
-    const content = await zip.generateAsync({ type: "blob" });
+  //   const content = await zip.generateAsync({ type: "blob" });
 
-    // Trigger download without file-saver
-    const url = URL.createObjectURL(content);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "media_collection.zip";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setPreparingDownload(false);
-    }, 100);
-  };
+  //   // Trigger download without file-saver
+  //   const url = URL.createObjectURL(content);
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = "media_collection.zip";
+  //   document.body.appendChild(a);
+  //   a.click();
+  //   setTimeout(() => {
+  //     document.body.removeChild(a);
+  //     URL.revokeObjectURL(url);
+  //     setPreparingDownload(false);
+  //   }, 100);
+  // };
 
   useEffect(() => {
     const handlePopState = () => {
@@ -115,11 +113,27 @@ export function MasonryGallery() {
 
   return (
     <div className="h-full">
-      <div className="flex justify-center my-6">
-        <Button onClick={handleDownloadAll} className="transition-all" disabled={preparingDownload}>
-          {preparingDownload && <LoaderIcon className="animate-spin" />}
-          <span>Download All Files as ZIP</span>
-        </Button>
+      <div className="flex justify-center gap-2 my-6">
+        <a
+          href="https://archive.org/download/proofs-20250910-t-132851-z-1-001/Proofs-20250910T132851Z-1-001.zip"
+          className="inline-flex items-center bg-primary hover:bg-primary/90 shadow px-4 py-2 rounded-md text-white transition"
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Download className="mr-2 w-5 h-5" />
+          Download Full Archive (ZIP)
+        </a>
+        <a
+          href="https://archive.org/download/proofs-20250910-t-132851-z-1-001/proofs-20250910-t-132851-z-1-001_archive.torrent"
+          className="inline-flex items-center bg-primary hover:bg-primary/90 shadow px-4 py-2 rounded-md text-white transition"
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Download className="mr-2 w-5 h-5" />
+          Download Full Archive (Torrent)
+        </a>
       </div>
       {/* Masonry Grid */}
       {isLoading && (
@@ -128,13 +142,19 @@ export function MasonryGallery() {
           <span className="ml-2 text-muted-foreground">Loading media...</span>
         </div>
       )}
-      <div className="gap-4 space-y-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 p-4">
+      <div className="gap-4 space-y-4 columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5">
         {mediaItems.map((item) => (
-          <div key={item.id} className="rounded-xl cursor-pointer" onClick={() => openLightbox(item)}>
+          <div
+            key={item.id}
+            className="rounded-xl break-inside-avoid cursor-pointer"
+            onClick={() => openLightbox(item)}
+          >
             <div className="relative">
-              <span className="top-1/2 left-1/2 z-50 absolute flex justify-center items-center bg-black/70 rounded-full w-14 h-14 -translate-x-1/2 -translate-y-1/2">
-                <Play className="w-7 h-7 text-white" fill="currentColor" />
-              </span>
+              {item.type === "video" && (
+                <span className="top-1/2 left-1/2 z-50 absolute flex justify-center items-center bg-black/70 rounded-full w-14 h-14 -translate-x-1/2 -translate-y-1/2">
+                  <Play className="w-7 h-7 text-white" fill="currentColor" />
+                </span>
+              )}
               <img src={getVideoThumbnail(item)} className="rounded-xl w-full h-auto object-cover" />
             </div>
             <div className="mt-2 text-muted-foreground text-xs text-center">{item.id || "Untitled"}</div>
@@ -220,7 +240,7 @@ export function MasonryGallery() {
                       rel="noopener noreferrer"
                     >
                       <Download className="mr-1 w-4 h-4" />
-                      Download Video
+                      Download
                     </a>
                   </Button>
                 </>

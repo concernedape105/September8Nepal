@@ -14,7 +14,7 @@ function App() {
         blood at your nearest blood bank to help save lives.
       </aside>
       {/* Top-level flex column wrapper */}
-      <div className="flex flex-col bg-background min-h-[100dvh]">
+      <div className="flex flex-col bg-background p-4 min-h-[100dvh]">
         <main className="flex-1">
           <div className="basis-[20%]">
             <div className="mb-8 text-center">
@@ -30,10 +30,10 @@ function App() {
             </div>
             <div className="flex sm:flex-row flex-col sm:justify-center sm:gap-6 mb-8 text-center">
               <span className="inline-flex justify-center items-center bg-red-500 shadow-sm px-5 py-2 border-destructive rounded-md font-semibold text-white text-base">
-                19+ <span className="opacity-80 ml-2 font-normal">Confirmed Deaths</span>
+                30+ <span className="opacity-80 ml-2 font-normal">Confirmed Deaths</span>
               </span>
               <span className="inline-flex justify-center items-center bg-yellow-400 shadow-sm mt-3 sm:mt-0 px-5 py-2 rounded-md font-semibold text-white text-base">
-                345+ <span className="opacity-80 ml-2 font-normal">Injured</span>
+                1000+ <span className="opacity-80 ml-2 font-normal">Injured</span>
               </span>
             </div>
           </div>

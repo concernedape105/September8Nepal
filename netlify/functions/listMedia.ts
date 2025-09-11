@@ -10,16 +10,22 @@ cloudinary.v2.config({
 
 export const handler: Handler = async () => {
   try {
-    // List all assets in your folder
-    const res = await cloudinary.v2.api.resources({
-      type: "upload",
-      resource_type: "video",
+    // Fetch images and videos in parallel
+    const [images, videos] = await Promise.all([
+      cloudinary.v2.api.resources({
+        type: "upload",
+        resource_type: "image",
+        max_results: 100,
+      }),
+      cloudinary.v2.api.resources({
+        type: "upload",
+        resource_type: "video",
+        max_results: 100,
+      }),
+    ]);
 
-      max_results: 100, // adjust if you have more
-    });
-
-    // Format the data for your app
-    const mediaList = res.resources.map((r: any) => ({
+    // Merge and format
+    const mediaList = [...images.resources, ...videos.resources].map((r: any) => ({
       id: r.public_id,
       url: r.secure_url,
       type: r.resource_type, // "image" or "video"
