@@ -28,7 +28,7 @@ export const handler: Handler = async () => {
     const mediaList = [...images.resources, ...videos.resources].map((r: any) => ({
       id: r.public_id,
       url: r.secure_url,
-      type: r.resource_type, // "image" or "video"
+      type: r.resource_type,
       width: r.width,
       height: r.height,
     }));
