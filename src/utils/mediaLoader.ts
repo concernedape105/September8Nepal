@@ -7,7 +7,7 @@ export type CloudinaryMedia = {
 };
 
 export const loadCloudinaryMedia = async (): Promise<CloudinaryMedia[]> => {
-  const res = await fetch("/.netlify/functions/listMedia");
+  const res = await fetch("/api/listMedia");
   if (!res.ok) {
     throw new Error("Failed to fetch media");
   }
