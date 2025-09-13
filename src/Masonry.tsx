@@ -157,7 +157,6 @@ export function MasonryGallery() {
               )}
               <img src={getVideoThumbnail(item)} className="rounded-xl w-full h-auto object-cover" />
             </div>
-            <div className="mt-2 text-muted-foreground text-xs text-center">{item.id || "Untitled"}</div>
           </div>
         ))}
       </div>
